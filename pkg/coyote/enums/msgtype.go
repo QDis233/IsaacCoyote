@@ -5,15 +5,16 @@ import (
 	"fmt"
 )
 
-type MsgType int
+type MsgType string
 
 const (
-	MsgTypeHeartBeat MsgType = iota
-	MsgTypeBind
-	MsgTypeMessage
-	MsgTypeBreak
-	MsgTypeError
-	MsgTypeUnknown
+	MsgTypeHeartBeat MsgType = "heartbeat"
+	MsgTypeBind      MsgType = "bind"
+	MsgTypeMessage   MsgType = "msg"
+	MsgTypeBreak     MsgType = "break"
+	MsgTypeError     MsgType = "error"
+
+	MsgTypeUnknown MsgType = "unknown"
 )
 
 func GetMsgType(rawMsgType string) MsgType {
@@ -33,21 +34,7 @@ func GetMsgType(rawMsgType string) MsgType {
 }
 
 func (m *MsgType) String() string {
-	switch *m {
-	case MsgTypeHeartBeat:
-		return "heartbeat"
-	case MsgTypeBind:
-		return "bind"
-	case MsgTypeMessage:
-		return "msg"
-	case MsgTypeBreak:
-		return "break"
-	case MsgTypeError:
-		return "error"
-	case MsgTypeUnknown:
-		return ""
-	}
-	return ""
+	return string(*m)
 }
 
 func (m *MsgType) MarshalJSON() ([]byte, error) {

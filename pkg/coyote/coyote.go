@@ -57,17 +57,32 @@ func (c *Coyote) NewSession() *Session {
 	return session
 }
 
-func (c *Coyote) sendMsg(s *melody.Session, msg WSMessage) {
+func (c *Coyote) sendMsg(s *melody.Session, msg WSMessage) error {
 	jsonMsg, err := json.Marshal(msg)
 	if err != nil {
 		zap.L().Error("failed to marshal error message", zap.Error(err))
-		return
+		return err
+	}
+	err = s.Write(jsonMsg)
+	if err != nil {
+		zap.L().Error("failed to send message", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (c *Coyote) closeWithMsg(s *melody.Session, msg WSMessage) error {
+	jsonMsg, err := json.Marshal(msg)
+	if err != nil {
+		zap.L().Error("failed to marshal error message", zap.Error(err))
+		return err
 	}
 	err = s.Write(jsonMsg)
 	if err != nil {
 		zap.L().Error("failed to close session", zap.Error(err))
-		return
+		return err
 	}
+	return nil
 }
 
 func (c *Coyote) connectHandler(s *melody.Session) {
@@ -79,7 +94,7 @@ func (c *Coyote) connectHandler(s *melody.Session) {
 			ClientID: clientID,
 			MsgData:  enums.RetCodeReceiverOffline.String(),
 		}
-		c.sendMsg(s, errMsg)
+		c.closeWithMsg(s, errMsg)
 		_ = s.Close()
 		return
 	}
@@ -90,7 +105,7 @@ func (c *Coyote) connectHandler(s *melody.Session) {
 			ClientID: clientID,
 			MsgData:  enums.RetCodeClientIDAlreadyUsed.String(),
 		}
-		c.sendMsg(s, errMsg)
+		c.closeWithMsg(s, errMsg)
 		_ = s.Close()
 	}
 

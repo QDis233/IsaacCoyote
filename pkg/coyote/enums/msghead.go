@@ -2,36 +2,20 @@ package enums
 
 import "encoding/json"
 
-type MsgHead int
+type MsgHead string
 
 const (
-	MsgHeadTargetID MsgHead = iota
-	MsgHeadDGLab
-	MsgHeadStrength
-	MsgHeadPulse
-	MsgHeadClear
-	MsgHeadFeedback
-	MsgHeadUnknown
+	MsgHeadTargetID MsgHead = "targetId"
+	MsgHeadDGLab    MsgHead = "DGLAB"
+	MsgHeadStrength MsgHead = "strength"
+	MsgHeadPulse    MsgHead = "pulse"
+	MsgHeadClear    MsgHead = "clear"
+	MsgHeadFeedback MsgHead = "feedback"
+	MsgHeadUnknown  MsgHead = ""
 )
 
 func (m MsgHead) String() string {
-	switch m {
-	case MsgHeadTargetID:
-		return "targetId"
-	case MsgHeadDGLab:
-		return "DGLAB"
-	case MsgHeadStrength:
-		return "strength"
-	case MsgHeadPulse:
-		return "pulse"
-	case MsgHeadClear:
-		return "clear"
-	case MsgHeadFeedback:
-		return "feedback"
-	case MsgHeadUnknown:
-		return "unknown"
-	}
-	return ""
+	return string(m)
 }
 
 func (m MsgHead) MarshalJSON() ([]byte, error) {
