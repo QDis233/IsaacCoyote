@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+    <name>IsaacCoyote</name>
+    <directory>isaac-coyote</directory>
+    <id>0</id>
+    <author>行此方</author>
+    <description>挨电</description>
+    <version>1.0</version>
+    <visibility>Private</visibility>
+    <tag id="Lua"/>
+    <tag id="Tweaks"/>
+</metadata>
