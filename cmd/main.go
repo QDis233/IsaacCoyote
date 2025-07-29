@@ -61,7 +61,8 @@ func main() {
 	}()
 
 	coyoteSession := c.NewSession()
-	err = util.PrintTerminalQRCode(coyoteSession.GetQRCodeContent())
+	//_ = util.PrintTerminalQRCode(coyoteSession.GetQRCodeContent())
+	err = util.ShowQRCode("qrcode.png", coyoteSession.GetQRCodeContent())
 	if err != nil {
 		zap.L().Error("获取二维码失败", zap.Error(err))
 		return
