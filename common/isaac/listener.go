@@ -165,11 +165,13 @@ func (g *GameListener) dispatchEvent(eventList []EventMessageData, deathFlag boo
 			g.triggerCallback(ManualRestartEvent, nil)
 			break
 		case GameStartEvent.String():
-			g.triggerCallback(GameStartEvent, nil)
+			g.triggerCallback(GameStartEvent, eventData.Data.(GameStartEventData))
 			break
 		case GameExitEvent.String():
 			g.triggerCallback(GameExitEvent, nil)
 			break
+		case GameEndEvent.String():
+			g.triggerCallback(GameEndEvent, nil)
 		}
 	}
 }

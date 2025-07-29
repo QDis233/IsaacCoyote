@@ -2,7 +2,7 @@ package game
 
 import (
 	configModel "IsaacCoyote/common/config/model"
-	isaac2 "IsaacCoyote/common/isaac"
+	"IsaacCoyote/common/isaac"
 	"IsaacCoyote/pkg/coyote"
 	"IsaacCoyote/pkg/coyote/enums"
 	"container/list"
@@ -15,7 +15,7 @@ type Game struct {
 	config        *configModel.Game
 	coyoteSession *coyote.Session
 
-	isaacListener *isaac2.GameListener
+	isaacListener *isaac.GameListener
 	playerInfo    playerInfo
 
 	needContModeDecayCalc bool
@@ -101,46 +101,62 @@ func (g *Game) dispatchPulse() {
 }
 
 func (g *Game) initCallbacks() error {
-	//_ = g.isaacListener.RegisterCallback(isaac.GameStartEvent, func(callbackData interface{}) {
-	//	g.needContModeDecayCalc = true
-	//	g.playerInfo = playerInfo{}
-	//})
-
-	_ = g.isaacListener.RegisterCallback(isaac2.NewCollectibleEvent, func(callbackData interface{}) {
-		collData := callbackData.(isaac2.NewCollectibleEventData)
-		if g.config.ContinuousMode.OnNewCollectible.Enabled {
-			g.collStrengthAddA += g.config.ContinuousMode.OnNewCollectible.StrengthConfig[collData.Quality].StrengthA
-			g.collStrengthAddB += g.config.ContinuousMode.OnNewCollectible.StrengthConfig[collData.Quality].StrengthB
+	_ = g.isaacListener.RegisterCallback(isaac.GameStartEvent, func(callbackData interface{}) {
+		startData := callbackData.(isaac.GameStartEventData)
+		if !startData.IsContinue {
+			g.reset()
 		}
 	})
 
-	_ = g.isaacListener.RegisterCallback(isaac2.GameExitEvent, func(callbackData interface{}) {
-		g.needContModeDecayCalc = true
-		g.collStrengthAddA, g.collStrengthAddB = 0, 0
-		g.playerInfo = playerInfo{}
+	_ = g.isaacListener.RegisterCallback(isaac.GameEndEvent, func(callbackData interface{}) {
+		g.reset()
 	})
 
-	_ = g.isaacListener.RegisterCallback(isaac2.PlayerInfoUpdateEvent, func(callbackData interface{}) {
-		data := callbackData.(isaac2.PlayerInfoUpdateEventData)
+	_ = g.isaacListener.RegisterCallback(isaac.NewCollectibleEvent, func(callbackData interface{}) {
+		collData := callbackData.(isaac.NewCollectibleEventData)
+		if g.config.OnNewCollectible.Enabled {
+			g.collStrengthAddA += g.config.OnNewCollectible.StrengthConfig[collData.Quality].StrengthAddA
+			g.collStrengthAddB += g.config.OnNewCollectible.StrengthConfig[collData.Quality].StrengthAddB
+		}
+		g.needContModeDecayCalc = true
+
+		g.dequeLock.Lock()
+		g.pulseDeque = list.New()
+		g.dequeLock.Unlock()
+	})
+
+	_ = g.isaacListener.RegisterCallback(isaac.PlayerInfoUpdateEvent, func(callbackData interface{}) {
+		data := callbackData.(isaac.PlayerInfoUpdateEventData)
 		g.playerInfo.Health = data.Health
 		g.playerInfo.MaxHealth = data.MaxHealth
 	})
 
-	_ = g.isaacListener.RegisterCallback(isaac2.PlayerHurtEvent, func(interface{}) {
-		if !g.config.OnHurtMode.Enabled || !g.coyoteSession.IsBound() {
+	_ = g.isaacListener.RegisterCallback(isaac.PlayerHurtEvent, func(interface{}) {
+		if !g.config.OnHurt.Enabled || !g.coyoteSession.IsBound() {
 			return
 		}
 
 		var pulseIndexA int
 		var pulseIndexB int
+		var strengthA int
+		var strengthB int
+
+		if g.config.OnManualRestart.StrengthOperator == configModel.INCREMENT {
+			strengthA = g.getMinStrengthA() + g.config.OnManualRestart.StrengthA
+			strengthB = g.getMinStrengthB() + g.config.OnManualRestart.StrengthB
+		} else {
+			strengthA = g.config.OnManualRestart.StrengthA
+			strengthB = g.config.OnManualRestart.StrengthB
+		}
 
 		segmentList := list.New()
-		for duration := g.config.OnHurtMode.Duration; duration >= 0; duration -= 200 {
+
+		for duration := g.config.OnHurt.Duration; duration >= 0; duration -= 200 {
 			segment := pulseSegment{
-				FramesA:   nextTwoPulseFrames(g.config.OnHurtMode.PulseA.PulseWaveform, &pulseIndexA),
-				FramesB:   nextTwoPulseFrames(g.config.OnHurtMode.PulseA.PulseWaveform, &pulseIndexB),
-				StrengthA: g.config.OnHurtMode.StrengthA,
-				StrengthB: g.config.OnHurtMode.StrengthB,
+				FramesA:   nextTwoPulseFrames(g.config.OnHurt.PulseA.PulseWaveform, &pulseIndexA),
+				FramesB:   nextTwoPulseFrames(g.config.OnHurt.PulseB.PulseWaveform, &pulseIndexB),
+				StrengthA: strengthA,
+				StrengthB: strengthB,
 			}
 			segmentList.PushBack(segment)
 		}
@@ -151,20 +167,31 @@ func (g *Game) initCallbacks() error {
 		g.needContModeDecayCalc = true
 	})
 
-	_ = g.isaacListener.RegisterCallback(isaac2.PlayerDeathEvent, func(interface{}) {
-		if !g.config.OnDeathMode.Enabled || !g.coyoteSession.IsBound() {
+	_ = g.isaacListener.RegisterCallback(isaac.PlayerDeathEvent, func(interface{}) {
+		if !g.config.OnDeath.Enabled || !g.coyoteSession.IsBound() {
 			return
 		}
 
 		var pulseIndexA int
 		var pulseIndexB int
+		var strengthA int
+		var strengthB int
+
+		if g.config.OnManualRestart.StrengthOperator == configModel.INCREMENT {
+			strengthA = g.getMinStrengthA() + g.config.OnManualRestart.StrengthA
+			strengthB = g.getMinStrengthB() + g.config.OnManualRestart.StrengthB
+		} else {
+			strengthA = g.config.OnManualRestart.StrengthA
+			strengthB = g.config.OnManualRestart.StrengthB
+		}
+
 		segmentList := list.New()
-		for duration := g.config.OnDeathMode.Duration; duration >= 0; duration -= 200 {
+		for duration := g.config.OnDeath.Duration; duration >= 0; duration -= 200 {
 			segment := pulseSegment{
-				FramesA:   nextTwoPulseFrames(g.config.OnDeathMode.PulseA.PulseWaveform, &pulseIndexA),
-				FramesB:   nextTwoPulseFrames(g.config.OnDeathMode.PulseB.PulseWaveform, &pulseIndexB),
-				StrengthA: g.config.OnDeathMode.StrengthA,
-				StrengthB: g.config.OnDeathMode.StrengthB,
+				FramesA:   nextTwoPulseFrames(g.config.OnDeath.PulseA.PulseWaveform, &pulseIndexA),
+				FramesB:   nextTwoPulseFrames(g.config.OnDeath.PulseB.PulseWaveform, &pulseIndexB),
+				StrengthA: strengthA,
+				StrengthB: strengthB,
 			}
 			segmentList.PushBack(segment)
 		}
@@ -178,20 +205,31 @@ func (g *Game) initCallbacks() error {
 		g.playerInfo = playerInfo{}
 	})
 
-	_ = g.isaacListener.RegisterCallback(isaac2.ManualRestartEvent, func(callbackData interface{}) {
+	_ = g.isaacListener.RegisterCallback(isaac.ManualRestartEvent, func(callbackData interface{}) {
 		if !g.config.OnManualRestart.Enabled || !g.coyoteSession.IsBound() {
 			return
 		}
 
 		var pulseIndexA int
 		var pulseIndexB int
+		var strengthA int
+		var strengthB int
+
+		if g.config.OnManualRestart.StrengthOperator == configModel.INCREMENT {
+			strengthA = g.config.BaseStrengthA + g.config.OnManualRestart.StrengthA
+			strengthB = g.config.BaseStrengthB + g.config.OnManualRestart.StrengthB
+		} else {
+			strengthA = g.config.OnManualRestart.StrengthA
+			strengthB = g.config.OnManualRestart.StrengthB
+		}
+
 		segmentList := list.New()
 		for duration := g.config.OnManualRestart.Duration; duration >= 0; duration -= 200 {
 			segment := pulseSegment{
 				FramesA:   nextTwoPulseFrames(g.config.OnManualRestart.PulseA.PulseWaveform, &pulseIndexA),
 				FramesB:   nextTwoPulseFrames(g.config.OnManualRestart.PulseB.PulseWaveform, &pulseIndexB),
-				StrengthA: g.config.OnManualRestart.StrengthA,
-				StrengthB: g.config.OnManualRestart.StrengthB,
+				StrengthA: strengthA,
+				StrengthB: strengthB,
 			}
 			segmentList.PushBack(segment)
 		}
@@ -207,33 +245,19 @@ func (g *Game) initCallbacks() error {
 }
 
 func (g *Game) continuousMode() {
-	decayInterval := g.config.ContinuousMode.DecayInterval
-
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
-	var decayTicker *time.Ticker
 
-	if decayInterval != 0 {
-		decayTicker = time.NewTicker(time.Duration(decayInterval) * time.Millisecond)
-		defer decayTicker.Stop()
-	}
-
-	var pulseIndexA int
-	var pulseIndexB int
-	var prevSegment pulseSegment
+	var (
+		lastDecayTime = time.Now()
+		pulseIndexA   = 0
+		pulseIndexB   = 0
+		prevSegment   = pulseSegment{}
+	)
 
 	for range ticker.C {
 		if !g.config.ContinuousMode.Enabled || !g.coyoteSession.IsBound() || g.pulseDeque.Len() >= 100 {
 			continue
-		}
-
-		if g.config.ContinuousMode.DecayInterval != decayInterval {
-			if g.config.ContinuousMode.DecayInterval == 0 && decayTicker != nil {
-				decayTicker.Stop()
-			} else {
-				decayInterval = g.config.ContinuousMode.DecayInterval
-				decayTicker = time.NewTicker(time.Duration(decayInterval) * time.Millisecond)
-			}
 		}
 
 		if g.needContModeDecayCalc {
@@ -260,23 +284,21 @@ func (g *Game) continuousMode() {
 		}
 
 		//set strength
-		healthDiff := g.playerInfo.MaxHealth - g.playerInfo.Health
-		minA := g.config.ContinuousMode.BaseStrengthA + healthDiff*g.config.ContinuousMode.StrengthPerHealthA + g.collStrengthAddA
-		minB := g.config.ContinuousMode.BaseStrengthB + healthDiff*g.config.ContinuousMode.StrengthPerHealthB + g.collStrengthAddB
+		minA := g.getMinStrengthA()
+		minB := g.getMinStrengthB()
 
 		if g.config.ContinuousMode.DecayInterval > 0 {
 			segment.StrengthA = prevSegment.StrengthA
 			segment.StrengthB = prevSegment.StrengthB
 
-			select {
-			case <-decayTicker.C:
-				if segment.StrengthA > minA {
-					segment.StrengthA -= g.config.ContinuousMode.DecayValue
-				}
-				if segment.StrengthB > minB {
-					segment.StrengthB -= g.config.ContinuousMode.DecayValue
-				}
-			default:
+			intervalDuration := time.Duration(g.config.ContinuousMode.DecayInterval) * time.Millisecond
+			elapsed := time.Now().Sub(lastDecayTime)
+			if elapsed >= intervalDuration {
+				decayCount := int(elapsed / intervalDuration)
+				segment.StrengthA -= g.config.ContinuousMode.DecayValue * decayCount
+				segment.StrengthB -= g.config.ContinuousMode.DecayValue * decayCount
+
+				lastDecayTime = lastDecayTime.Add(time.Duration(decayCount) * intervalDuration)
 			}
 		} else {
 			segment.StrengthA, segment.StrengthB = minA, minB
@@ -306,7 +328,25 @@ func (g *Game) updateIndicator() {
 	}
 }
 
-func NewGame(config *configModel.Game, coyoteSession *coyote.Session, isaacListener *isaac2.GameListener) *Game {
+func (g *Game) getMinStrengthA() int {
+	return g.config.BaseStrengthA +
+		g.config.StrengthPerHealthA*(g.playerInfo.MaxHealth-g.playerInfo.Health) +
+		g.collStrengthAddA
+}
+
+func (g *Game) getMinStrengthB() int {
+	return g.config.BaseStrengthB +
+		g.config.StrengthPerHealthB*(g.playerInfo.MaxHealth-g.playerInfo.Health) +
+		g.collStrengthAddB
+}
+
+func (g *Game) reset() {
+	g.needContModeDecayCalc = true
+	g.collStrengthAddA, g.collStrengthAddB = 0, 0
+	g.playerInfo = playerInfo{}
+}
+
+func NewGame(config *configModel.Game, coyoteSession *coyote.Session, isaacListener *isaac.GameListener) *Game {
 	return &Game{
 		config:        config,
 		coyoteSession: coyoteSession,

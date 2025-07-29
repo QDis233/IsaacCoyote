@@ -1,5 +1,5 @@
 name: "IsaacCoyote"
-version: "0.1b"
+version: "0.3b"
 debug: false
 
 coyote:
@@ -45,56 +45,64 @@ patterns:
   tease2: &tease2 '["2525252500000000","222222220A0A0A0A","2020202014141414","1E1E1E1E1E1E1E1E","1B1B1B1B2D2D2D2D","1919191937373737","1717171741414141","141414144B4B4B4B","1212121255555555","1010101064646464","2525252500000000","222222220A0A0A0A","2020202014141414","1E1E1E1E1E1E1E1E","1B1B1B1B2D2D2D2D","1919191937373737","1717171741414141","141414144B4B4B4B","1212121255555555","1010101064646464","0A0A0A0A64646464","0A0A0A0A00000000","0B0B0B0B64646464","0C0C0C0C00000000","0D0D0D0D64646464","0E0E0E0E00000000","0F0F0F0F64646464","1010101000000000","1010101064646464","1111111100000000","1212121264646464","1313131300000000","1414141464646464","1515151500000000","1616161664646464","1717171700000000","1717171764646464","1818181800000000","1919191964646464","1A1A1A1A00000000","1B1B1B1B64646464","1C1C1C1C00000000","1D1D1D1D64646464","1E1E1E1E00000000","0A0A0A0A00000000","0A0A0A0A00000000"]'
 
 game:
+  # 当前强度 = base_strength_A + 损失的生命值 * strength_per_health_A + 道具的强度
+
+  # 基础强度
+  base_strength_A: 40
+  base_strength_B: 40
+
+  # 每损失一点生命值(半颗心)增加的强度
+  strength_per_health_A: 5
+  strength_per_health_B: 5
+
   # Continuous mode 开启后会一直有强度的模式
+  # 此模式的强度为 当前强度
   continuous_mode:
     # 启用?
     enabled: true
 
-    # 强度缓降: 受击或死亡这样会导致强度激增的时间结束时，强度会缓降
+    # 强度缓降: 像受击或死亡这样会导致强度激增的时间结束时，强度会缓降
     # 每隔 decay_interval 毫秒衰减 decay_value
     # 衰减间隔 单位 毫秒 | 设置为 0 以关闭缓降
-    decay_interval: 600
+    decay_interval: 200
     # 衰减值
     decay_value: 1
-
-    # 基础强度 | 此模式强度 = base_strength_A + base_strength_A * 损失生命值 (B通道同理)
-    base_strength_A: 40
-    base_strength_B: 40
-
-    # 每损失一点生命值(半颗心)增加的强度
-    strength_per_health_A: 5
-    strength_per_health_B: 5
-
-    # 在获取 道具 (collectible) 后增加强度
-    on_new_collectible:
-      # 启用 ?
-      enabled: true
-      strength_config:
-        1: # 一级
-            strength_A: 2 # 获取 quality=1 的道具时 A通道增加的强度
-            strength_B: 2 # 获取 quality=1 的道具时 B通道增加的强度
-        2: # 二级
-            strength_A: 4
-            strength_B: 4
-        3: # 三级
-            strength_A: 6
-            strength_B: 6
-        4: # 四级
-            strength_A: 10
-            strength_B: 10
 
     # 此模式的波形 | 详见 波形 | 留空可关闭通道?
     pulse_A: *breathing
     pulse_B: *breathing
 
+  # 在获取 道具 (collectible) 后增加强度
+  on_new_collectible:
+    # 启用 ?
+    enabled: true
+    strength_config:
+      1: # 一级
+        strength_add_A: 2 # 获取 quality=1 的道具时 A通道增加的强度
+        strength_add_B: 2 # 获取 quality=1 的道具时 B通道增加的强度
+      2: # 二级
+        strength_add_A: 4
+        strength_add_B: 4
+      3: # 三级
+        strength_add_A: 6
+        strength_add_B: 6
+      4: # 四级
+        strength_add_A: 10
+        strength_add_B: 10
+
   # On Hurt Mode 开启后在受伤时发电
-  on_hurt_mode:
+  on_hurt:
     # 启用?
     enabled: true
     # 持续时间 单位:毫秒
     duration: 4000
 
-    # 强度 绝对强度
+    # StrengthOperator:
+    # 可选: ABSOLUTE | INCREMENT
+    # ABSOLUTE 将强度设为 strength_A
+    # INCREMENT 在 当前强度 上增加 strength_A (不在游戏中, 计算道具，血量没有意义......)
+    strength_operator: INCREMENT
+
     strength_A: 80
     strength_B: 80
 
@@ -103,13 +111,18 @@ game:
     pulse_B: *grainy
 
   # On Death Mode 开启后在死亡时发电
-  on_death_mode:
+  on_death:
     # 启用?
     enabled: true
     # 持续时间 单位:毫秒
     duration: 15000
 
-    # 强度
+    # StrengthOperator:
+    # 可选: ABSOLUTE | INCREMENT
+    # ABSOLUTE 将强度设为 strength_A
+    # INCREMENT 在 当前强度 上增加 strength_A (不在游戏中, 计算道具，血量没有意义......)
+    strength_operator: INCREMENT
+
     strength_A: 100
     strength_B: 100
 
@@ -118,13 +131,20 @@ game:
     pulse_B: *compress
 
   # On Manual Restart 开启后在 手动重开游戏 时发电
-  # 具体逻辑: 上一次游戏 未死亡 且 未达成结局 并 退出游戏 后 选择新游戏
+  # 具体逻辑: 上一次游戏 未死亡 且 未达成结局 并 退出游戏 后 开始新游戏
   on_manual_restart:
     # 启用?
     enabled: true
     # 持续时间 单位:毫秒
     duration: 30000
-    # 强度 绝对强度
+
+    # StrengthOperator:
+    # 可选: ABSOLUTE | INCREMENT
+    # ABSOLUTE 将强度设为 strength_A
+    # INCREMENT 在 基础强度(base_strength_A) 上增加 strength_A
+    # (注意是在"基础强度"上增加; 不在游戏中, 计算道具，血量没有意义......)
+    strength_operator: ABSOLUTE
+
     strength_A: 100
     strength_B: 100
     # 此模式的波形 | 详见 波形 | 留空可关闭通道?

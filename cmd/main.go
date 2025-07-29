@@ -6,6 +6,7 @@ import (
 	"IsaacCoyote/common/isaac"
 	"IsaacCoyote/common/logging"
 	"IsaacCoyote/pkg/coyote"
+	"IsaacCoyote/pkg/coyote/enums"
 	"IsaacCoyote/util"
 	"fmt"
 	"go.uber.org/zap"
@@ -61,12 +62,17 @@ func main() {
 	}()
 
 	coyoteSession := c.NewSession()
-	//_ = util.PrintTerminalQRCode(coyoteSession.GetQRCodeContent())
+	_ = util.PrintTerminalQRCode(coyoteSession.GetQRCodeContent())
 	err = util.ShowQRCode("qrcode.png", coyoteSession.GetQRCodeContent())
 	if err != nil {
 		zap.L().Error("获取二维码失败", zap.Error(err))
 		return
 	}
+
+	zap.L().Info("等待连接...... 请使用使用 DG-LAB app 扫码二维码")
+	coyoteSession.RegisterCallback(enums.OnSessionBind, func(session *coyote.Session, callbackData coyote.CallbackData[any]) {
+		zap.L().Info("连接成功")
+	})
 	coyoteSession.WaitForBind()
 
 	isaacListener := isaac.NewGameListener()

@@ -75,6 +75,12 @@ func (e *EventMessageData) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		e.Data = playerInfoUpdateEventData
+	case "GameStartEvent":
+		var gameStartEventData GameStartEventData
+		if err := json.Unmarshal(eventMsgData.Data, &gameStartEventData); err != nil {
+			return err
+		}
+		e.Data = gameStartEventData
 	default:
 		e.Data = nil
 	}
@@ -97,6 +103,10 @@ type NewCollectibleEventData struct {
 type PlayerInfoUpdateEventData struct {
 	Health    int `json:"health"`
 	MaxHealth int `json:"maxHealth"`
+}
+
+type GameStartEventData struct {
+	IsContinue bool `json:"isContinue"`
 }
 
 type UpdateIndicatorData struct {
