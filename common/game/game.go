@@ -28,9 +28,7 @@ type Game struct {
 
 func (g *Game) Run() error {
 	go g.dispatchPulse()
-	if g.config.ContinuousMode.Enabled {
-		go g.continuousMode()
-	}
+	go g.continuousMode()
 	err := g.initCallbacks()
 	if err != nil {
 		return err
@@ -141,12 +139,12 @@ func (g *Game) initCallbacks() error {
 		var strengthA int
 		var strengthB int
 
-		if g.config.OnManualRestart.StrengthOperator == configModel.INCREMENT {
-			strengthA = g.getMinStrengthA() + g.config.OnManualRestart.StrengthA
-			strengthB = g.getMinStrengthB() + g.config.OnManualRestart.StrengthB
+		if g.config.OnHurt.StrengthOperator == configModel.INCREMENT {
+			strengthA = g.getMinStrengthA() + g.config.OnHurt.StrengthA
+			strengthB = g.getMinStrengthB() + g.config.OnHurt.StrengthB
 		} else {
-			strengthA = g.config.OnManualRestart.StrengthA
-			strengthB = g.config.OnManualRestart.StrengthB
+			strengthA = g.config.OnHurt.StrengthA
+			strengthB = g.config.OnHurt.StrengthB
 		}
 
 		segmentList := list.New()
@@ -177,12 +175,12 @@ func (g *Game) initCallbacks() error {
 		var strengthA int
 		var strengthB int
 
-		if g.config.OnManualRestart.StrengthOperator == configModel.INCREMENT {
-			strengthA = g.getMinStrengthA() + g.config.OnManualRestart.StrengthA
-			strengthB = g.getMinStrengthB() + g.config.OnManualRestart.StrengthB
+		if g.config.OnDeath.StrengthOperator == configModel.INCREMENT {
+			strengthA = g.getMinStrengthA() + g.config.OnDeath.StrengthA
+			strengthB = g.getMinStrengthB() + g.config.OnDeath.StrengthB
 		} else {
-			strengthA = g.config.OnManualRestart.StrengthA
-			strengthB = g.config.OnManualRestart.StrengthB
+			strengthA = g.config.OnDeath.StrengthA
+			strengthB = g.config.OnDeath.StrengthB
 		}
 
 		segmentList := list.New()
