@@ -46,10 +46,10 @@ func main() {
 		if len(localAddressList) > 1 {
 			zap.L().Error("或许你有多个地址, 请手动指定")
 			zap.L().Info("ip", zap.Any("ips", localAddressList))
+			return
 		}
 
 		coyoteConfig.Address = localAddressList[0]
-		return
 	}
 	c := coyote.NewCoyote(&coyoteConfig)
 	go func() {
