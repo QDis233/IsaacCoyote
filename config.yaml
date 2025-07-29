@@ -48,12 +48,12 @@ game:
   # 当前强度 = base_strength_A + 损失的生命值 * strength_per_health_A + 道具的强度
 
   # 基础强度
-  base_strength_A: 40
-  base_strength_B: 40
+  base_strength_A: 20
+  base_strength_B: 20
 
   # 每损失一点生命值(半颗心)增加的强度
-  strength_per_health_A: 5
-  strength_per_health_B: 5
+  strength_per_health_A: 2
+  strength_per_health_B: 2
 
   # Continuous mode 开启后会一直有强度的模式
   # 此模式的强度为 当前强度
@@ -64,7 +64,7 @@ game:
     # 强度缓降: 像受击或死亡这样会导致强度激增的时间结束时，强度会缓降
     # 每隔 decay_interval 毫秒衰减 decay_value
     # 衰减间隔 单位 毫秒 | 设置为 0 以关闭缓降
-    decay_interval: 200
+    decay_interval: 400
     # 衰减值
     decay_value: 1
 
@@ -78,14 +78,14 @@ game:
     enabled: true
     strength_config:
       1: # 一级
-        strength_add_A: 2 # 获取 quality=1 的道具时 A通道增加的强度
-        strength_add_B: 2 # 获取 quality=1 的道具时 B通道增加的强度
+        strength_add_A: 1 # 获取 quality=1 的道具时 A通道增加的强度
+        strength_add_B: 1 # 获取 quality=1 的道具时 B通道增加的强度
       2: # 二级
-        strength_add_A: 4
-        strength_add_B: 4
+        strength_add_A: 2
+        strength_add_B: 2
       3: # 三级
-        strength_add_A: 6
-        strength_add_B: 6
+        strength_add_A: 5
+        strength_add_B: 5
       4: # 四级
         strength_add_A: 10
         strength_add_B: 10
@@ -100,11 +100,11 @@ game:
     # StrengthOperator:
     # 可选: ABSOLUTE | INCREMENT
     # ABSOLUTE 将强度设为 strength_A
-    # INCREMENT 在 当前强度 上增加 strength_A (不在游戏中, 计算道具，血量没有意义......)
+    # INCREMENT 在 当前强度 上增加 strength_A
     strength_operator: INCREMENT
 
-    strength_A: 80
-    strength_B: 80
+    strength_A: 40
+    strength_B: 40
 
     # 此模式的波形 | 详见 波形 | 留空可关闭通道?
     pulse_A: *grainy
@@ -120,11 +120,11 @@ game:
     # StrengthOperator:
     # 可选: ABSOLUTE | INCREMENT
     # ABSOLUTE 将强度设为 strength_A
-    # INCREMENT 在 当前强度 上增加 strength_A (不在游戏中, 计算道具，血量没有意义......)
+    # INCREMENT 在 当前强度 上增加 strength_A
     strength_operator: INCREMENT
 
-    strength_A: 100
-    strength_B: 100
+    strength_A: 60
+    strength_B: 60
 
     # 此模式的波形 | 详见 波形 | 留空可关闭通道?
     pulse_A: *compress
@@ -142,11 +142,11 @@ game:
     # 可选: ABSOLUTE | INCREMENT
     # ABSOLUTE 将强度设为 strength_A
     # INCREMENT 在 基础强度(base_strength_A) 上增加 strength_A
-    # (注意是在"基础强度"上增加; 不在游戏中, 计算道具，血量没有意义......)
+    # (注意是在 "基础强度" 上增加; 因为不在游戏中, 计算道具，血量没有意义......)
     strength_operator: ABSOLUTE
 
-    strength_A: 100
-    strength_B: 100
+    strength_A: 60
+    strength_B: 60
     # 此模式的波形 | 详见 波形 | 留空可关闭通道?
     pulse_A: *compress
     pulse_B: *compress
