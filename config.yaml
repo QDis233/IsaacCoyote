@@ -78,6 +78,9 @@ game:
     # 启用 ?
     enabled: true
     strength_config:
+      0: # 零级
+        strength_add_A: 0
+        strength_add_B: 0
       1: # 一级
         strength_add_A: 1 # 获取 quality=1 的道具时 A通道增加的强度
         strength_add_B: 1 # 获取 quality=1 的道具时 B通道增加的强度

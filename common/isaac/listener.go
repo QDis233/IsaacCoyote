@@ -12,7 +12,7 @@ type CallbackFunc func(callbackData interface{})
 type GameListener struct {
 	modDataPath string
 
-	resourceManager *ResourceManager
+	ResourceManager *ResourceManager
 	callbacks       map[Event][]CallbackFunc
 
 	currModData          ModData
@@ -22,7 +22,7 @@ type GameListener struct {
 }
 
 func (g *GameListener) Run() error {
-	err := g.resourceManager.LoadResources()
+	err := g.ResourceManager.LoadResources()
 	if err != nil {
 		zap.L().Error("请检查资源文件", zap.Error(err))
 		return err
@@ -158,9 +158,6 @@ func (g *GameListener) dispatchEvent(eventList []EventMessageData, deathFlag boo
 				g.triggerCallback(PlayerHurtEvent, eventData.Data.(PlayerHurtEventData))
 			}
 			break
-		case NewCollectibleEvent.String():
-			g.triggerCallback(NewCollectibleEvent, eventData.Data.(NewCollectibleEventData))
-			break
 		case PlayerInfoUpdateEvent.String():
 			g.triggerCallback(PlayerInfoUpdateEvent, eventData.Data.(PlayerInfoUpdateEventData))
 			break
@@ -178,6 +175,7 @@ func (g *GameListener) dispatchEvent(eventList []EventMessageData, deathFlag boo
 			break
 		case GameEndEvent.String():
 			g.triggerCallback(GameEndEvent, nil)
+			break
 		}
 	}
 }
@@ -206,6 +204,6 @@ func (g *GameListener) RegisterCallback(eventType Event, callback CallbackFunc) 
 
 func NewGameListener() *GameListener {
 	return &GameListener{
-		resourceManager: NewResourceManager(),
+		ResourceManager: NewResourceManager(),
 	}
 }

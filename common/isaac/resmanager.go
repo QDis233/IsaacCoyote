@@ -7,8 +7,8 @@ import (
 )
 
 type ResourceManager struct {
-	items     map[int]ItemDetail
-	itemIndex map[string]int
+	collectibles      map[int]ItemDetail
+	collectiblesIndex map[string]int
 
 	resLock sync.Mutex
 }
@@ -25,7 +25,7 @@ func (m *ResourceManager) LoadResources() error {
 }
 
 func (m *ResourceManager) praseItemDetails() error {
-	itemData, err := os.ReadFile("resources/items.json")
+	itemData, err := os.ReadFile("resources/collectibles.json")
 	if err != nil {
 		return err
 	}
@@ -36,16 +36,16 @@ func (m *ResourceManager) praseItemDetails() error {
 	}
 
 	for id, item := range ItemDetails {
-		m.itemIndex[item.Name] = id
+		m.collectiblesIndex[item.Name] = id
 	}
-	m.items = ItemDetails
+	m.collectibles = ItemDetails
 
 	return nil
 }
 
 func (m *ResourceManager) GetItemByName(itemName string) (ItemDetail, error) {
-	if itemID, ok := m.itemIndex[itemName]; ok {
-		if item, ok := m.items[itemID]; ok {
+	if itemID, ok := m.collectiblesIndex[itemName]; ok {
+		if item, ok := m.collectibles[itemID]; ok {
 			return item, nil
 		}
 	}
@@ -54,7 +54,7 @@ func (m *ResourceManager) GetItemByName(itemName string) (ItemDetail, error) {
 
 func NewResourceManager() *ResourceManager {
 	return &ResourceManager{
-		items:     make(map[int]ItemDetail),
-		itemIndex: make(map[string]int),
+		collectibles:      make(map[int]ItemDetail),
+		collectiblesIndex: make(map[string]int),
 	}
 }
