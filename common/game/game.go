@@ -137,8 +137,6 @@ func (g *Game) initCallbacks() error {
 						}
 					}
 				}
-
-				g.needContModeDecayCalc = true
 			}
 		}
 	})
