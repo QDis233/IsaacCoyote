@@ -107,8 +107,9 @@ func (g *GameListener) checkConnection() {
 
 func (g *GameListener) Write() error {
 	data := ModData{
-		Send:    make([]ModMessage, 0),
-		Receive: g.msgBuffer,
+		Send:      make([]ModMessage, 0),
+		Receive:   g.msgBuffer,
+		ModConfig: g.currModData.ModConfig,
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {

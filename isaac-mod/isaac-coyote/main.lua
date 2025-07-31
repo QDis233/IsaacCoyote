@@ -4,7 +4,7 @@ local mod                = RegisterMod("IsaacCoyote", 1)
 local json               = require("json")
 
 ---Constants
-local VERSION = "0.3b"
+local VERSION            = "1.0.0"
 local HEARTBEAT_INTERVAL = 5 * 60 -- 5 seconds
 local UPDATE_FREQUENCY   = 15     -- 15 frames: 1/4 seconds
 local COYOTE_CALLBACKS   = {
@@ -15,9 +15,15 @@ local COYOTE_CALLBACKS   = {
 
 ---variables
 local modSettings        = {
-    IndicatorOffsetX = 4,
-    IndicatorOffsetY = 190,
-    IndicatorSize = 10
+    IndicatorOffsetX = 0,
+    IndicatorOffsetY = 0,
+    IndicatorSize = 10,
+    time = 0,
+}
+
+local indicatorData      = {
+    strengthA = 0,
+    strengthB = 0,
 }
 
 local localPlayerRNG
@@ -29,7 +35,6 @@ local isConnected        = false
 local isRecviedHeartbeat = false
 local heartbeatTimer     = HEARTBEAT_INTERVAL
 local dataTable
-local indicatorData
 local font               = Font()
 local game               = Game()
 font:Load("font/cjk/lanapixel.fnt")
@@ -54,6 +59,8 @@ local function initConfigMenu()
             end,
             OnChange = function(n)
                 modSettings.IndicatorOffsetX = n
+                modSettings.time = Isaac.GetFrameCount()
+                dataTable.WriteTable()
             end,
             Info = { "Indicator Offset X" }
         }
@@ -72,6 +79,8 @@ local function initConfigMenu()
             end,
             OnChange = function(n)
                 modSettings.IndicatorOffsetY = n
+                modSettings.time = Isaac.GetFrameCount()
+                dataTable.WriteTable()
             end,
             Info = { "Indicator Offset Y" }
         }
@@ -90,6 +99,8 @@ local function initConfigMenu()
             end,
             OnChange = function(n)
                 modSettings.IndicatorSize = n
+                modSettings.time = Isaac.GetFrameCount()
+                dataTable.WriteTable()
             end,
             Info = { "Indicator Size" }
         }
@@ -102,6 +113,7 @@ local function newDataTable()
         data = {
             send = {},
             receive = {},
+            modConfig = modSettings,
         },
         newMessages = {
 
@@ -126,6 +138,7 @@ local function newDataTable()
 
     function object.WriteTable()
         object.data.send = object.newMessages
+        object.data.modConfig = modSettings
         mod:SaveData(json.encode(object.data))
     end
 
@@ -136,6 +149,10 @@ local function newDataTable()
 
         if not object.data or not object.data.receive then
             return
+        end
+
+        if object.data.modConfig and object.data.modConfig.time > modSettings.time then
+            modSettings = object.data.modConfig
         end
 
         if #object.data.receive > 0 then
@@ -362,13 +379,17 @@ end
 
 ---Main
 ---clear the save data on mod initialization
-mod:SaveData('{"send":[],"receive":[]}')
-initConfigMenu()
 dataTable = newDataTable()
-indicatorData = {
-    strengthA = 0,
-    strengthB = 0,
-}
+if not pcall(dataTable._loadData) then
+    mod:SaveData('{"send":[],"receive":[], "modConfig":{"IndicatorOffsetX":0,"IndicatorOffsetY":0,"IndicatorSize":10,"time":-1}') -- Using time=-1 resets config to defaults on next load
+else
+    if not dataTable.data.modConfig then
+        dataTable.data.modConfig = modSettings
+    end
+    dataTable.data.modConfig.time = -1
+end
+
+initConfigMenu()
 
 dataTable.RegisterCallback(COYOTE_CALLBACKS.C_ON_CONNECT, onConnect)
 dataTable.RegisterCallback(COYOTE_CALLBACKS.C_ON_HEARTBEAT, onHeartbeat)

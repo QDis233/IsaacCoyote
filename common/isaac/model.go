@@ -3,8 +3,9 @@ package isaac
 import "encoding/json"
 
 type ModData struct {
-	Send    []ModMessage `json:"send"`
-	Receive []ModMessage `json:"receive"`
+	Send      []ModMessage `json:"send"`
+	Receive   []ModMessage `json:"receive"`
+	ModConfig interface{}  `json:"modConfig"`
 }
 
 type ModMessage struct {
