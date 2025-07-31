@@ -173,7 +173,6 @@ func (g *Game) initCallbacks() error {
 			segmentList.PushBack(segment)
 		}
 		g.dequeLock.Lock()
-		g.pulseDeque = list.New() //clear
 		g.pulseDeque.PushFrontList(segmentList)
 		g.dequeLock.Unlock()
 		g.needContModeDecayCalc = true
