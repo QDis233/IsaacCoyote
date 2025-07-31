@@ -113,3 +113,12 @@ type UpdateIndicatorData struct {
 	StrengthA int `json:"strengthA"`
 	StrengthB int `json:"strengthB"`
 }
+
+type ItemDetail struct {
+	ID           int      `json:"id"`
+	Type         string   `json:"type"`
+	Name         string   `json:"name"`
+	Quality      int      `json:"quality"`
+	CraftQuality int      `json:"craftquality"`
+	Tags         []string `json:"tags"`
+}

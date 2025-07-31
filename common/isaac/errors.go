@@ -31,3 +31,11 @@ type TimeoutError struct {
 func (e TimeoutError) Error() string {
 	return e.Message
 }
+
+type NoSuchItemError struct {
+	Message string
+}
+
+func (e NoSuchItemError) Error() string {
+	return e.Message
+}

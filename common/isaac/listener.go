@@ -12,8 +12,8 @@ type CallbackFunc func(callbackData interface{})
 type GameListener struct {
 	modDataPath string
 
-	isListenerWritten bool //防止fs-notify循环
-	callbacks         map[Event][]CallbackFunc
+	resourceManager *ResourceManager
+	callbacks       map[Event][]CallbackFunc
 
 	currModData          ModData
 	lastRecHeartbeatTime time.Time
@@ -22,6 +22,12 @@ type GameListener struct {
 }
 
 func (g *GameListener) Run() error {
+	err := g.resourceManager.LoadResources()
+	if err != nil {
+		zap.L().Error("请检查资源文件", zap.Error(err))
+		return err
+	}
+
 	pid := waitForProcess("isaac-ng.exe")
 	modDataPath, err := getModDataFile(pid)
 	if err != nil {
@@ -199,5 +205,7 @@ func (g *GameListener) RegisterCallback(eventType Event, callback CallbackFunc) 
 }
 
 func NewGameListener() *GameListener {
-	return &GameListener{}
+	return &GameListener{
+		resourceManager: NewResourceManager(),
+	}
 }
