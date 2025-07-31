@@ -4,6 +4,7 @@ local mod                = RegisterMod("IsaacCoyote", 1)
 local json               = require("json")
 
 ---Constants
+local VERSION = "0.3b"
 local HEARTBEAT_INTERVAL = 5 * 60 -- 5 seconds
 local UPDATE_FREQUENCY   = 15     -- 15 frames: 1/4 seconds
 local COYOTE_CALLBACKS   = {
@@ -20,7 +21,6 @@ local modSettings        = {
 }
 
 local localPlayerRNG
-local collectiblesList   = {}
 
 local isPrevGameExited   = false
 local isPrevGameLiving   = true
@@ -86,7 +86,7 @@ local function initConfigMenu()
                 return modSettings.IndicatorSize
             end,
             Display = function()
-                return "Indicator Size: " .. modSettings.IndicatorSize/10
+                return "Indicator Size: " .. modSettings.IndicatorSize / 10
             end,
             OnChange = function(n)
                 modSettings.IndicatorSize = n
@@ -219,6 +219,17 @@ local function checkConnection()
     end
 end
 
+local function newPlayerInfoMsg()
+    player = getLocalPlayer()
+    if player then
+        dataTable.PushMessage(newEventMsg("PlayerInfoUpdateEvent", {
+            health = player:GetHearts(),
+            maxHealth = player:GetMaxHearts(),
+            collectibles = Isaac.ExecuteCommand("listcollectibles")
+        }))
+    end
+end
+
 local function RenderIndicator()
     local size = modSettings.IndicatorSize / 10
     if not isConnected then
@@ -248,7 +259,7 @@ local function RenderIndicator()
     font:DrawStringScaledUTF8(
         string.format("A: %d B:%d", indicatorData.strengthA, indicatorData.strengthB),
         modSettings.IndicatorOffsetX + (size) * 2,
-        modSettings.IndicatorOffsetY + (size) *12,
+        modSettings.IndicatorOffsetY + (size) * 12,
         size,
         size,
         KColor(1, 1, 1, 0.8),
@@ -284,13 +295,7 @@ function mod:onRender()
 
     if isConnected then
         if frameCount % UPDATE_FREQUENCY == 0 then
-            player = getLocalPlayer()
-            if player and player:GetHearts() > 0 then
-                dataTable.PushMessage(newEventMsg("PlayerInfoUpdateEvent", {
-                    health = player:GetHearts(),
-                    maxHealth = player:GetMaxHearts(),
-                }))
-            end
+            newPlayerInfoMsg()
             dataTable.WriteTable()
             dataTable.newMessages = {}
         end
@@ -301,44 +306,6 @@ end
 function mod:regLocalPlayerRNG(player)
     if player and player.FrameCount == 1 then
         localPlayerRNG = getPlayerRNG(player)
-    end
-end
-
-function mod:checkNewCollectible()
-    player = getLocalPlayer()
-    if not player then
-        return
-    end
-
-    -- local itemData = player.QueuedItem.Item
-    -- if itemData ~= nil and itemData.IsCollectible(itemData) then
-    --     if not queuedItemList[itemData.ID] then
-    --         queuedItemList[itemData.ID] = itemData
-    --     end
-    -- else
-    --     for id, _ in pairs(queuedItemList) do
-    --         local itemData = queuedItemList[id]
-    --         local eventData = {
-    --             name = itemData.Name,
-    --             id = itemData.ID,
-    --             quality = itemData.Quality,
-    --         }
-    --         dataTable.PushMessage(newEventMsg("NewCollectibleEvent", eventData))
-    --         queuedItemList[id] = nil
-    --     end
-    -- end
-
-    local itemData = player.QueuedItem.Item
-    if itemData ~= nil and itemData.IsCollectible(itemData) then
-        if not collectiblesList[itemData.ID] then
-            local eventData = {
-                name = itemData.Name,
-                id = itemData.ID,
-                quality = itemData.Quality,
-            }
-            dataTable.PushMessage(newEventMsg("NewCollectibleEvent", eventData))
-            collectiblesList[itemData.ID] = itemData
-        end
     end
 end
 
@@ -387,7 +354,7 @@ function mod:onGameStarted(isContinue)
             dataTable.PushMessage(newEventMsg("ManualRestartEvent", {}))
         end
     end
-    collectiblesList = {}
+
     dataTable.PushMessage(newEventMsg("GameStartEvent", { isContinue = isContinue }))
     isPrevGameExited = false
     isPrevGameLiving = true
@@ -409,7 +376,6 @@ dataTable.RegisterCallback(COYOTE_CALLBACKS.C_ON_INDICATOR_UPDATE, onUpdateIndic
 
 mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.onRender)
 
-mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.checkNewCollectible)
 mod:AddCallback(ModCallbacks.MC_POST_PEFFECT_UPDATE, mod.regLocalPlayerRNG)
 
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onPlayerDamage)

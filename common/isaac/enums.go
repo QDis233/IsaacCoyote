@@ -10,7 +10,6 @@ const (
 	GameStartEvent        Event = "GameStartEvent"
 	GameExitEvent         Event = "GameExitEvent"
 	GameEndEvent          Event = "GameEndEvent"
-	NewCollectibleEvent   Event = "NewCollectibleEvent"
 	PlayerInfoUpdateEvent Event = "PlayerInfoUpdateEvent"
 )
 

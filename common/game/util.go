@@ -1,7 +1,11 @@
 package game
 
 import (
+	"IsaacCoyote/common/isaac"
 	"IsaacCoyote/pkg/coyote"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 func nextTwoPulseFrames(pulse []coyote.PulseFrame, index *int) []coyote.PulseFrame {
@@ -16,4 +20,33 @@ func nextTwoPulseFrames(pulse []coyote.PulseFrame, index *int) []coyote.PulseFra
 
 	*index = (*index + 2) % len(pulse)
 	return []coyote.PulseFrame{frame0, frame1}
+}
+
+func parseCollectiblesString(s string, resManager *isaac.ResourceManager) ([]itemDetailWrapper, error) {
+	re := regexp.MustCompile(`([^,:]+):([^,]+)`)
+	matches := re.FindAllStringSubmatch(s, -1)
+
+	result := make([]itemDetailWrapper, 0)
+	for _, match := range matches {
+		w := itemDetailWrapper{}
+		if len(match) < 3 {
+			continue
+		}
+
+		item, err := resManager.GetItemByName(strings.TrimSpace(match[1]))
+		if err != nil {
+			return nil, err
+		}
+		num, err := strconv.Atoi(strings.TrimSpace(match[2]))
+		if err != nil {
+			return nil, err
+		}
+
+		w.itemDetail = item
+		w.num = num
+
+		result = append(result, w)
+	}
+
+	return result, nil
 }

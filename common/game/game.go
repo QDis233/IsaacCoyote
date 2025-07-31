@@ -110,23 +110,37 @@ func (g *Game) initCallbacks() error {
 		g.reset()
 	})
 
-	_ = g.isaacListener.RegisterCallback(isaac.NewCollectibleEvent, func(callbackData interface{}) {
-		collData := callbackData.(isaac.NewCollectibleEventData)
-		if g.config.OnNewCollectible.Enabled {
-			g.collStrengthAddA += g.config.OnNewCollectible.StrengthConfig[collData.Quality].StrengthAddA
-			g.collStrengthAddB += g.config.OnNewCollectible.StrengthConfig[collData.Quality].StrengthAddB
-		}
-		g.needContModeDecayCalc = true
-
-		g.dequeLock.Lock()
-		g.pulseDeque = list.New()
-		g.dequeLock.Unlock()
-	})
-
 	_ = g.isaacListener.RegisterCallback(isaac.PlayerInfoUpdateEvent, func(callbackData interface{}) {
 		data := callbackData.(isaac.PlayerInfoUpdateEventData)
 		g.playerInfo.Health = data.Health
 		g.playerInfo.MaxHealth = data.MaxHealth
+		collectibles, err := parseCollectiblesString(data.Collectibles, g.isaacListener.ResourceManager)
+		if err != nil {
+			zap.L().Error("获取物品失败: ", zap.Error(err))
+		}
+
+		// Update collectibles and collectibles strength
+		if g.playerInfo.collString != data.Collectibles {
+			g.playerInfo.collString = data.Collectibles
+			g.playerInfo.Collectibles = collectibles
+
+			if g.config.OnNewCollectible.Enabled {
+				g.collStrengthAddA = 0
+				g.collStrengthAddB = 0
+				for _, item := range collectibles {
+					if quality := item.itemDetail.Quality; quality >= 0 {
+						if config, ok := g.config.OnNewCollectible.StrengthConfig[quality]; ok {
+							g.collStrengthAddA += config.StrengthAddA * item.num
+							g.collStrengthAddB += config.StrengthAddB * item.num
+						} else {
+							zap.L().Info("未配置强度的物品: " + item.itemDetail.Name)
+						}
+					}
+				}
+
+				g.needContModeDecayCalc = true
+			}
+		}
 	})
 
 	_ = g.isaacListener.RegisterCallback(isaac.PlayerHurtEvent, func(interface{}) {

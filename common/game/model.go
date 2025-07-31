@@ -1,6 +1,9 @@
 package game
 
-import "IsaacCoyote/pkg/coyote"
+import (
+	"IsaacCoyote/common/isaac"
+	"IsaacCoyote/pkg/coyote"
+)
 
 // pulseSegment 200ms
 type pulseSegment struct {
@@ -11,6 +14,13 @@ type pulseSegment struct {
 }
 
 type playerInfo struct {
-	Health    int
-	MaxHealth int
+	Health       int
+	MaxHealth    int
+	Collectibles []itemDetailWrapper
+	collString   string
+}
+
+type itemDetailWrapper struct {
+	itemDetail isaac.ItemDetail
+	num        int
 }

@@ -101,8 +101,9 @@ type NewCollectibleEventData struct {
 }
 
 type PlayerInfoUpdateEventData struct {
-	Health    int `json:"health"`
-	MaxHealth int `json:"maxHealth"`
+	Health       int    `json:"health"`
+	MaxHealth    int    `json:"maxHealth"`
+	Collectibles string `json:"collectibles"`
 }
 
 type GameStartEventData struct {
