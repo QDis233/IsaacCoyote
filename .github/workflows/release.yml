@@ -1,0 +1,74 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+
+    - name: Build Go binaries
+      run: |
+        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o IsaacCoyote_x64.exe -trimpath -ldflags "-s -w" cmd/main.go
+        CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o IsaacCoyote_x86.exe -trimpath -ldflags "-s -w" cmd/main.go
+
+    - name: Install UPX
+      run: sudo apt-get update && sudo apt-get install -y upx
+
+    - name: Compress binaries with UPX
+      run: |
+        upx --best --lzma IsaacCoyote_x64.exe -o IsaacCoyote_x64-compressed.exe
+        upx --best --lzma IsaacCoyote_x86.exe -o IsaacCoyote_x86-compressed.exe
+
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-package
+
+        mv IsaacCoyote_x64-compressed.exe release-package/IsaacCoyote_x64.exe
+        mv IsaacCoyote_x86-compressed.exe release-package/IsaacCoyote_x86.exe
+
+        cp config.yaml release-package/
+        cp -r resources release-package/
+        cp -r isaac-mod/isaac-coyote release-package/
+        
+        cd release-package
+        zip -r ../IsaacCoyote-${{ github.ref_name }}.zip ./*
+        cd ..
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        git fetch --prune
+        changelog=$(git log --pretty=format:"- %s (%h)" ${{ github.ref_name }}^..HEAD)
+        echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+        echo "$changelog" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ github.ref_name }}
+        body: |
+          ### Changelog
+          ${{ env.CHANGELOG }}
+
+          ### SHA256 Checksum
+          ```sh
+          sha256sum IsaacCoyote-${{ github.ref_name }}.zip
+          ```
+        files: |
+          IsaacCoyote-${{ github.ref_name }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
