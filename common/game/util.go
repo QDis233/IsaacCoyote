@@ -35,7 +35,8 @@ func parseCollectiblesString(s string, resManager *isaac.ResourceManager) ([]ite
 
 		item, err := resManager.GetItemByName(strings.TrimSpace(match[1]))
 		if err != nil {
-			return nil, err
+			// Ignore items glitched without IDs or other information.
+			continue
 		}
 		num, err := strconv.Atoi(strings.TrimSpace(match[2]))
 		if err != nil {
