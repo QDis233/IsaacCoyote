@@ -45,7 +45,7 @@ func main() {
 			return
 		}
 		if len(localAddressList) > 1 {
-			zap.L().Error("或许你有多个地址, 请手动指定")
+			zap.L().Error("或许你有多个地址(已在下方列出), 请手动在配置文件中指定 ip (一般是192.168.x.x)")
 			zap.L().Info("ip", zap.Any("ips", localAddressList))
 			return
 		}
@@ -71,7 +71,7 @@ func main() {
 
 	zap.L().Info("等待连接...... 请使用使用 DG-LAB app 扫码二维码")
 	coyoteSession.RegisterCallback(enums.OnSessionBind, func(session *coyote.Session, callbackData coyote.CallbackData[any]) {
-		zap.L().Info("连接成功")
+		zap.L().Info("DG-LAB 已连接")
 	})
 	coyoteSession.WaitForBind()
 

@@ -34,6 +34,7 @@ func (g *GameListener) Run() error {
 		zap.L().Error("获取数据文件失败", zap.Error(err))
 		return err
 	}
+	zap.L().Debug("get mod data file", zap.String("modDataPath", modDataPath))
 	g.modDataPath = modDataPath
 
 	g.AddMessage(ModMessage{
@@ -153,6 +154,7 @@ func (g *GameListener) FetchData() error {
 
 func (g *GameListener) dispatchEvent(eventList []EventMessageData, deathFlag bool) {
 	for _, eventData := range eventList {
+		zap.L().Debug("event", zap.String("event", eventData.Type))
 		switch eventData.Type {
 		case PlayerHurtEvent.String():
 			if !deathFlag {

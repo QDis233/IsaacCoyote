@@ -34,8 +34,16 @@
    - 在 steam 创意工坊 下载 MCM(Mod Config Menu)MOD 用于调节游戏内强度指示器的位置 (可选)
 5. 仔细阅读并配置 config.yaml
    - 配置文件为热重载, 保存后即可生效
-   - 详见 `配置文件`
-6. 启动 IsaacCoyote.exe 控制器, 使用 DG-LAB `SOCKET控制` 功能扫码连接
+   - 详见 [`配置文件`](#配置文件)
+6. 启动 IsaacCoyote.exe 控制器, 使用 `DG-LAB` app `SOCKET控制` 功能扫码连接
+
+# 常见问题
+
+- ERROR 或许你有多个ip地址
+  - 在下方列出的ip地址中选择正确的那个，填入配置文件 [`控制器配置`](#控制器配置) 中的 address 中
+- 有关 [错误道具](https://isaac.huijiwiki.com/wiki/%E9%81%93%E5%85%B7/%E9%94%99%E8%AF%AF%E9%81%93%E5%85%B7)
+  - v1.0.1 中忽略了错误道具, 因此捡到错误道具不会增加强度
+  - v1.0.0 中捡到错误道具会报错
 
 # 配置文件
 

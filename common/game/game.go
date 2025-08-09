@@ -100,6 +100,7 @@ func (g *Game) dispatchPulse() {
 
 func (g *Game) initCallbacks() error {
 	_ = g.isaacListener.RegisterCallback(isaac.GameStartEvent, func(callbackData interface{}) {
+		zap.L().Debug("游戏开始")
 		startData := callbackData.(isaac.GameStartEventData)
 		if !startData.IsContinue {
 			g.reset()
@@ -133,15 +134,18 @@ func (g *Game) initCallbacks() error {
 							g.collStrengthAddA += config.StrengthAddA * item.num
 							g.collStrengthAddB += config.StrengthAddB * item.num
 						} else {
-							zap.L().Info("未配置强度的物品: " + item.itemDetail.Name)
+							zap.L().Info("未配置的强度: " + item.itemDetail.Name)
 						}
 					}
 				}
+				zap.L().Debug("更新物品", zap.Any("data", collectibles))
+				zap.L().Debug("更新物品强度", zap.Any("strengthA", g.collStrengthAddA), zap.Any("strengthB", g.collStrengthAddB))
 			}
 		}
 	})
 
 	_ = g.isaacListener.RegisterCallback(isaac.PlayerHurtEvent, func(interface{}) {
+		zap.L().Debug("玩家受伤")
 		if !g.config.OnHurt.Enabled || !g.coyoteSession.IsBound() {
 			return
 		}
@@ -177,6 +181,7 @@ func (g *Game) initCallbacks() error {
 	})
 
 	_ = g.isaacListener.RegisterCallback(isaac.PlayerDeathEvent, func(interface{}) {
+		zap.L().Debug("玩家死亡")
 		if !g.config.OnDeath.Enabled || !g.coyoteSession.IsBound() {
 			return
 		}
@@ -215,6 +220,7 @@ func (g *Game) initCallbacks() error {
 	})
 
 	_ = g.isaacListener.RegisterCallback(isaac.ManualRestartEvent, func(callbackData interface{}) {
+		zap.L().Debug("重开游戏")
 		if !g.config.OnManualRestart.Enabled || !g.coyoteSession.IsBound() {
 			return
 		}
